@@ -1,0 +1,40 @@
+<html>
+<link rel="stylesheet" type="text/css" href="/static/css/gallery_smart.css" />
+
+<head>
+    <title>Wedding Photo Share</title>
+    <link rel="icon" href="/static/img/favicon.ico">
+</head>
+
+<body>
+    <ul class="height">
+        {% for n,k,p in ranking %}
+        <li id="list-img-rank">
+            <center>
+                <div class="prize{{n}}">
+
+                <img src="/static/img/gahag-0090329825.png" alt=""  >
+                <font size="10" >{{p}}</font>
+                <img src="/static/img/gahag-0090329825.png" alt=""  >
+                </div>
+                <br>
+                <div class="name">
+                    <font size="6" >{{users[k["_id"]]}}様</font>
+                </div>
+            </center>
+            <figure>
+                <div class="rank{{-n}}">
+                <img src="{{k.photid}}" alt="">
+                {% if n == 1 %}
+                <img src="/static/img/01.png" alt="" id="waku">
+                {% endif %}
+                </div>
+            </figure>
+        </li>
+        {% endfor %}
+
+    </ul>
+
+</body>
+
+</html>

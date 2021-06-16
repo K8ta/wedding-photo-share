@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>Wedding Photo Share</title>
+    <link rel="icon" href="/static/img/favicon.ico">
+</head>
+
+<body>
+    <form action="/admin" method="POST">
+{% if ranking_flg == "1"%}
+        結果発表モード<button name="mode" value=0>切り替え</button>
+{% else %}
+        投稿モード<button name="mode" value=1>切り替え</button>
+{% endif %}
+    </form>
+
+</body>
+
+</html>

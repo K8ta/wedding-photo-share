@@ -1,0 +1,24 @@
+{% for p in photo %}
+<li id="list-img">
+  <figure>
+    <img src="{{p.photid}}" alt="">
+    <p>
+      <center>
+        <form action="/like" method="POST">
+          {% if userid in p.likeusers %}
+          <button class="like-btn" name="like" value="{{p._id}}" disabled>
+            <font size="6" >すてき♡</font>
+          </button>
+          {% else %}
+          <button class="like-btn-disp" name="like" value="{{p._id}}">
+            <font size="6" >すてき</font>
+          </button>
+          {% endif %}
+        </form>
+      </center>
+    </p>
+  </figure>
+</li>
+{% endfor %}
+<li id="list-bottom">
+</li>

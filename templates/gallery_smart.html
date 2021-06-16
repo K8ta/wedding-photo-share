@@ -1,0 +1,185 @@
+<html>
+<link rel="stylesheet" type="text/css" href="/static/css/gallery_smart.css" />
+<script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.0/jquery-ui.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ajax.js?ver=1.0"></script>
+
+<head>
+    <title>Wedding Photo Share</title>
+    <link rel="icon" href="/static/img/favicon.ico">
+</head>
+
+<body>
+
+    <div class="modal js-modal">
+      <div class="modal__bg"></div>
+        <div class="modal__content" >
+          <div class="cp_arrows">
+            <div class="cp_arrow cp_arrowfirst"></div>
+            <div class="cp_arrow cp_arrowsecond"></div>
+          </div>
+          <div class="modal_canvas">
+            <canvas id="canvas" width="0" height="0"></canvas>
+          </div>
+          <div class="close-btn">
+            <a class="js-modal-close-btn" href="javascript:void(0);" onclick="CloseModal();">
+              <font size="6" >投稿せずに閉じる</font>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    <ul class="height">
+
+    </ul>
+    {% if mode == "1" %}
+    <header class="fix-01">
+      <a href="/ranking">
+              <button type=" button">結果発表</button>
+      </a>
+    </header>
+    {% else %}
+    <header class="fix-01">
+      <form id="fm1" action="/upload" method="POST" enctype="multipart/form-data">
+        <label class="btn-stitch">
+          <font size="14" >画像を選択</font>
+        <input type="file" name="userfile" accept="image/*" id="filesend">
+        </label>
+      </form>
+    </header>
+    {% endif %}
+
+</body>
+
+<script>
+  var file = null; // 選択されるファイル
+  var blob = null; // 画像(BLOBデータ)
+  const THUMBNAIL_WIDTH = 740; // 画像リサイズ後の横の長さの最大値
+  const THUMBNAIL_HEIGHT = 740; // 画像リサイズ後の縦の長さの最大値
+  var isPaused = false;
+
+  // ファイルが選択されたら
+  $('input[type=file]').change(function() {
+    isPaused = true;
+    // ファイルを取得
+    file = $(this).prop('files')[0];
+    // 選択されたファイルが画像かどうか判定
+    if (file.type != 'image/jpeg' && file.type != 'image/png') {
+      // 画像でない場合は終了
+      file = null;
+      blob = null;
+      isPaused = false;
+      return;
+    }
+    $('.js-modal').fadeIn();
+    // 画像をリサイズする
+    var image = new Image();
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      image.onload = function() {
+        var width, height;
+        if(image.width > image.height){
+          // 横長の画像は横のサイズを指定値にあわせる
+          var ratio = image.height/image.width;
+          width = THUMBNAIL_WIDTH;
+          height = THUMBNAIL_WIDTH * ratio;
+        } else {
+          // 縦長の画像は縦のサイズを指定値にあわせる
+          var ratio = image.width/image.height;
+          width = THUMBNAIL_HEIGHT * ratio;
+          height = THUMBNAIL_HEIGHT;
+        }
+        // サムネ描画用canvasのサイズを上で算出した値に変更
+        var canvas = $('#canvas')
+                     .attr('width', width)
+                     .attr('height', height);
+        var ctx = canvas[0].getContext('2d');
+        // canvasに既に描画されている画像をクリア
+        ctx.clearRect(0,0,width,height);
+        // canvasにサムネイルを描画
+        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
+
+        // canvasからbase64画像データを取得
+        var base64 = canvas.get(0).toDataURL('image/jpeg');        
+        // base64からBlobデータを作成
+        var barr, bin, i, len;
+        bin = atob(base64.split('base64,')[1]);
+        len = bin.length;
+        barr = new Uint8Array(len);
+        i = 0;
+        while (i < len) {
+          barr[i] = bin.charCodeAt(i);
+          i++;
+        }
+        blob = new Blob([barr], {type: 'image/jpeg'});
+        console.log(blob);
+      }
+      image.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
+  });
+
+function CloseModal(){
+        $('.js-modal').fadeOut();
+        $('input[type=file]').val('');
+        isPaused = false;
+        return false;
+}
+
+  function FormSubmit(){
+     var formElem = document.getElementById('fm1');
+     var fd = new FormData(formElem);
+     fd.append('file', blob);
+     var xhr = new XMLHttpRequest();
+     xhr.open('POST', formElem.action, true);
+     xhr.send(fd);
+     $('.js-modal').fadeOut();
+     $('input[type=file]').val('');
+     isPaused = false;
+     return false;
+  }
+
+  /*
+  * スワイプイベント設定
+  */
+  function setSwipe(elem) {
+    let t = document.querySelector(elem);
+    let startX;        // タッチ開始 x座標
+    let startY;        // タッチ開始 y座標
+    let moveX;    // スワイプ中の x座標
+    let moveY;    // スワイプ中の y座標
+    let dist = 30;    // スワイプを感知する最低距離（ピクセル単位）
+     
+    // タッチ開始時： xy座標を取得
+    t.addEventListener("touchstart", function(e) {
+        e.preventDefault();
+        startX = e.touches[0].pageX;
+        startY = e.touches[0].pageY;
+    });
+     
+    // スワイプ中： xy座標を取得
+    t.addEventListener("touchmove", function(e) {
+        e.preventDefault();
+        moveX = e.changedTouches[0].pageX;
+        moveY = e.changedTouches[0].pageY;
+    });
+     
+    // タッチ終了時： スワイプした距離から上下どちらにスワイプしたかを判定する/距離が短い場合何もしない
+    t.addEventListener("touchend", function(e) {
+        if (startY > moveY && startY > moveY + dist) {        // 下から上にスワイプ
+          FormSubmit();
+        }
+        else if (startY < moveY && startY + dist < moveY) {    // 上から下にスワイプ
+
+          return false;
+        }
+    });
+  }
+
+  window.addEventListener("load", function(){
+	  // スワイプイベント設定
+	  setSwipe(".modal_canvas");
+  });
+</script>
+
+</html>
